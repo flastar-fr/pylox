@@ -72,7 +72,7 @@ class Parser:
 
         while not self.is_at_end():
             if self.previous().token_type == TokenType.SEMICOLON:
-                return
+                return None
 
             match self.peek().token_type:
                 case TokenType.CLASS:

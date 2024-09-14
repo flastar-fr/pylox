@@ -1,6 +1,5 @@
-import os.path
+import os
 
-from ast_printer import AstPrinter
 from parser import Parser
 from interpreter import Interpreter
 from runtime_error import RuntimeException
@@ -34,7 +33,7 @@ class Pylox:
     def run_file(self, file_path: str):
         with open(file_path, "r") as f:
             lines = f.readlines()
-        self.run("\n".join(lines))
+        self.run("".join(lines))
 
         if self.had_error:
             exit(65)
