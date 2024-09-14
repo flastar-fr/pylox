@@ -1,6 +1,7 @@
 from expr import Expr, Binary, Unary, Literal, Grouping
 from token_class import Token
 from token_type import TokenType
+from parse_error import ParseError
 
 
 class Parser:
@@ -148,7 +149,3 @@ class Parser:
             return Grouping(expression)
 
         self.error(self.peek(), "Expect expression.")
-
-
-class ParseError(RuntimeError):
-    pass

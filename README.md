@@ -14,7 +14,7 @@ So, after this book I will try to create a new language by myself, re implementi
 and make sure that I understand correctly the way that a high level interpreter works.
 
 ## Current stages :
-- [ ] Evaluating Expressions
+- [x] Evaluating Expressions
 - [ ] Statements and State
 - [ ] Control Flow
 - [ ] Functions

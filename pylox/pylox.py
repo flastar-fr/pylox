@@ -2,11 +2,17 @@ import os.path
 
 from ast_printer import AstPrinter
 from parser import Parser
+from interpreter import Interpreter
+from runtime_error import RuntimeException
 from scanner import Scanner
 
 
 class Pylox:
     had_error: bool = False
+    had_runtime_error: bool = False
+
+    def __init__(self):
+        self.interpreter = Interpreter(self)
 
     def run_command(self, args_list: [str]):
         if len(args_list) > 2:
@@ -32,6 +38,8 @@ class Pylox:
 
         if self.had_error:
             exit(65)
+        if self.had_runtime_error:
+            exit(70)
 
     def run(self, source: str):
         scanner = Scanner(source, self)
@@ -43,7 +51,7 @@ class Pylox:
         if self.had_error:
             return
 
-        print(AstPrinter().print(expression))
+        self.interpreter.interprete(expression)
 
     def show_error(self, line_number: int, message: str):
         self.report(line_number, "", message)
@@ -51,3 +59,7 @@ class Pylox:
     def report(self, line_number: int, where: str, message: str):
         print(f"Line {line_number} Error {where} : {message}")
         self.had_error = True
+
+    def call_runtime_error(self, error: RuntimeException):
+        print(f"{error.message}\n[line {error.token.line}]")
+        self.had_runtime_error = True
