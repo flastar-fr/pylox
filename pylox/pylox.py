@@ -45,12 +45,12 @@ class Pylox:
         tokens = scanner.scan_tokens()
 
         parser = Parser(tokens, self)
-        expression = parser.parse()
+        statements = parser.parse()
 
         if self.had_error:
             return
 
-        self.interpreter.interprete(expression)
+        self.interpreter.interprete(statements)
 
     def show_error(self, line_number: int, message: str):
         self.report(line_number, "", message)

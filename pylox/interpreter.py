@@ -1,20 +1,23 @@
-from typing import Any
-
+from typing import Any, final
 
 import expr as expre
+import stmt
+
+from environment import Environment
 from runtime_error import RuntimeException
 from token_class import Token
 from token_type import TokenType
 
 
-class Interpreter(expre.Visitor):
+class Interpreter(expre.Visitor, stmt.Visitor):
     def __init__(self, program):
         self.program = program
+        self.environment = Environment()
 
-    def interprete(self, expression: expre.Expr):
+    def interprete(self, statements: list[stmt.Stmt]):
         try:
-            value = self.evaluate(expression)
-            print(self.stringify(value))
+            for statement in statements:
+                self.execute(statement)
         except RuntimeException as e:
             self.program.call_runtime_error(e)
 
@@ -36,8 +39,27 @@ class Interpreter(expre.Visitor):
 
         return str(to_string)
 
-    def visit_assign_expr(self, expr):
-        pass
+    def visit_print_stmt(self, statement):
+        value = self.evaluate(statement.expression)
+        print(self.stringify(value))
+
+    def visit_expression_stmt(self, statement):
+        self.evaluate(statement.expression)
+
+    def visit_var_stmt(self, statement: stmt.Var):
+        value = None
+        if statement.initializer is not None:
+            value = self.evaluate(statement.initializer)
+
+        self.environment.define(statement.name.lexeme, value)
+
+    def visit_block_stmt(self, statement: stmt.Block):
+        self.execute_block(statement.statements, Environment(self.environment))
+
+    def visit_assign_expr(self, expr: expre.Assign):
+        value = self.evaluate(expr.value)
+        self.environment.assign(expr.name, value)
+        return value
 
     def visit_binary_expr(self, expr: expre.Binary):
         left = self.evaluate(expr.left)
@@ -115,11 +137,24 @@ class Interpreter(expre.Visitor):
 
         return None
 
-    def visit_variable_expr(self, expr):
-        pass
+    def visit_variable_expr(self, expr: expre.Variable):
+        return self.environment.get(expr.name)
 
     def evaluate(self, expr: expre.Expr) -> Any:
         return expr.accept(self)
+
+    def execute(self, statement: stmt.Stmt):
+        statement.accept(self)
+
+    def execute_block(self, statements: list[stmt.Stmt], environment: Environment):
+        previous = self.environment
+        try:
+            self.environment = environment
+
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            self.environment = previous
 
     @staticmethod
     def is_truthy(object_to_verify: expre.Expr) -> bool:

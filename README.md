@@ -2,7 +2,7 @@
 This project is a Python implementation of the well known book written by Robert Nystrom [Crafting Interpreter](https://craftinginterpreters.com/).
 
 ## Pylox command installation
-You can add the pylox.bat file into your environment variable path to simulate a language command line call.
+You can add the pylox.bat file into your environment variable path to simulate a language command line call such as ``pylox 3*5``.
 
 ## Objectives :
 I'm following the book step by step and trying to figure out how to implemente the Java code I see in Python.
@@ -15,7 +15,7 @@ and make sure that I understand correctly the way that a high level interpreter 
 
 ## Current stages :
 - [x] Evaluating Expressions
-- [ ] Statements and State
+- [x] Statements and State
 - [ ] Control Flow
 - [ ] Functions
 - [ ] Resolving and Binding
