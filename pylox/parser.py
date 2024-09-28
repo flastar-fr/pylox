@@ -1,5 +1,5 @@
-from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from stmt import Print, Expression, Var, Block
+from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
+from stmt import Print, Expression, Var, Block, If, While
 from token_class import Token
 from token_type import TokenType
 from parse_error import ParseError
@@ -28,11 +28,50 @@ class Parser:
             return None
 
     def statement(self):
+        if self.match(TokenType.FOR):
+            return self.for_statement()
+        if self.match(TokenType.IF):
+            return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
         return self.expression_statement()
+
+    def for_statement(self):
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+
+        if self.match(TokenType.SEMICOLON):
+            initializer = None
+        elif self.match(TokenType.VAR):
+            initializer = self.var_declaration()
+        else:
+            initializer = self.expression_statement()
+
+        condition = None
+        if not self.check(TokenType.SEMICOLON):
+            condition = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+        increment = None
+        if not self.check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ';' after for clauses.")
+        body = self.statement()
+
+        if increment is not None:
+            body = Block([body, Expression(increment)])
+
+        if condition is None:
+            condition = Literal(True)
+        body = While(condition, body)
+
+        if initializer is not None:
+            body = Block([initializer, body])
+
+        return body
 
     def print_statement(self):
         value = self.expression()
@@ -49,10 +88,30 @@ class Parser:
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, initializer)
 
+    def while_statement(self):
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect '=' after condition.")
+        body = self.statement()
+
+        return While(condition, body)
+
     def expression_statement(self):
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, "Except ';' after value.")
         return Expression(expr)
+
+    def if_statement(self):
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
+
+        then_branch = self.statement()
+        else_branche = None
+        if self.match(TokenType.ELSE):
+            else_branche = self.statement()
+
+        return If(condition, then_branch, else_branche)
 
     def block(self):
         statements = []
@@ -64,7 +123,7 @@ class Parser:
         return statements
 
     def assignment(self) -> Expr:
-        expr = self.equality()
+        expr = self.or_operator()
 
         if self.match(TokenType.EQUAL):
             equals = self.previous()
@@ -76,6 +135,26 @@ class Parser:
                 return Assign(name, value)
 
             self.program.show_error(equals, "Invalid assignment target.")
+
+        return expr
+
+    def or_operator(self):
+        expr = self.and_operator()
+
+        while self.match(TokenType.OR):
+            current_operator = self.previous()
+            right = self.and_operator()
+            expr = Logical(expr, current_operator, right)
+
+        return expr
+
+    def and_operator(self):
+        expr = self.equality()
+
+        while self.match(TokenType.OR):
+            current_operator = self.previous()
+            right = self.equality()
+            expr = Logical(expr, current_operator, right)
 
         return expr
 

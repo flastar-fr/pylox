@@ -16,7 +16,7 @@ and make sure that I understand correctly the way that a high level interpreter 
 ## Current stages :
 - [x] Evaluating Expressions
 - [x] Statements and State
-- [ ] Control Flow
+- [x] Control Flow
 - [ ] Functions
 - [ ] Resolving and Binding
 - [ ] Classes

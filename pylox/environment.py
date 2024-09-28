@@ -13,7 +13,7 @@ class Environment:
         self.values[name] = value
 
     def get(self, name: Token) -> Any:
-        if self.values.get(name.lexeme, None) is not None:
+        if name.lexeme in self.values.keys():
             return self.values[name.lexeme]
 
         if self.enclosing is not None:
@@ -22,7 +22,7 @@ class Environment:
         raise RuntimeException(name, f"Undefined variable {name.lexeme}.")
 
     def assign(self, name: Token, value: Any):
-        if self.values.get(name.lexeme, None) is not None:
+        if name.lexeme in self.values.keys():
             self.values[name.lexeme] = value
             return None
 

@@ -1,4 +1,4 @@
-from typing import Any, final
+from typing import Any
 
 import expr as expre
 import stmt
@@ -53,8 +53,18 @@ class Interpreter(expre.Visitor, stmt.Visitor):
 
         self.environment.define(statement.name.lexeme, value)
 
+    def visit_while_stmt(self, statement: stmt.While):
+        while self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.body)
+
     def visit_block_stmt(self, statement: stmt.Block):
         self.execute_block(statement.statements, Environment(self.environment))
+
+    def visit_if_stmt(self, statement: stmt.If):
+        if self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.then_branch)
+        elif statement.else_branch is not None:
+            self.execute(statement.else_branch)
 
     def visit_assign_expr(self, expr: expre.Assign):
         value = self.evaluate(expr.value)
@@ -113,8 +123,17 @@ class Interpreter(expre.Visitor, stmt.Visitor):
     def visit_literal_expr(self, expr: expre.Literal):
         return expr.value
 
-    def visit_logical_expr(self, expr):
-        pass
+    def visit_logical_expr(self, expr: expre.Logical):
+        left = self.evaluate(expr.left)
+
+        if expr.operator.token_type == TokenType.OR:
+            if self.is_truthy(left):
+                return left
+        else:
+            if not self.is_truthy(left):
+                return left
+
+        return self.evaluate(expr.right)
 
     def visit_set_expr(self, expr):
         pass
