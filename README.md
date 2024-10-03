@@ -17,7 +17,7 @@ and make sure that I understand correctly the way that a high level interpreter 
 - [x] Evaluating Expressions
 - [x] Statements and State
 - [x] Control Flow
-- [ ] Functions
+- [x] Functions
 - [ ] Resolving and Binding
 - [ ] Classes
 - [ ] Inheritance

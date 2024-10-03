@@ -35,6 +35,14 @@ class Visitor(ABC):
     def visit_while_stmt(self, statement):
         pass
 
+    @abstractmethod
+    def visit_function_stmt(self, statement):
+        pass
+
+    @abstractmethod
+    def visit_return_stmt(self, statement):
+        pass
+
 
 class Expression(Stmt):
     def __init__(self, expression: Expr) -> None:
@@ -86,3 +94,22 @@ class While(Stmt):
 
     def accept(self, visitor: Visitor):
         visitor.visit_while_stmt(self)
+
+
+class Function(Stmt):
+    def __init__(self, name: Token, params: list[Token], body: list[Stmt]):
+        self.name = name
+        self.params = params
+        self.body = body
+
+    def accept(self, visitor: Visitor):
+        return visitor.visit_function_stmt(self)
+
+
+class Return(Stmt):
+    def __init__(self, keyword: Token, value: Expr):
+        self.keyword = keyword
+        self.value = value
+
+    def accept(self, visitor: Visitor):
+        return visitor.visit_return_stmt(self)

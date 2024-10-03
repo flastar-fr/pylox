@@ -4,7 +4,11 @@ import expr as expre
 import stmt
 
 from environment import Environment
+from lox_callable import LoxCallable
+from clock_function import ClockFunction
+from lox_function import LoxFunction
 from runtime_error import RuntimeException
+from return_exception import Return
 from token_class import Token
 from token_type import TokenType
 
@@ -12,7 +16,10 @@ from token_type import TokenType
 class Interpreter(expre.Visitor, stmt.Visitor):
     def __init__(self, program):
         self.program = program
-        self.environment = Environment()
+        self.globals = Environment()
+        self.environment = self.globals
+
+        self.globals.define("clock", ClockFunction())
 
     def interprete(self, statements: list[stmt.Stmt]):
         try:
@@ -43,8 +50,19 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         value = self.evaluate(statement.expression)
         print(self.stringify(value))
 
+    def visit_return_stmt(self, statement: stmt.Return):
+        value = None
+        if statement.value is not None:
+            value = self.evaluate(statement.value)
+
+        raise Return(value)
+
     def visit_expression_stmt(self, statement):
         self.evaluate(statement.expression)
+
+    def visit_function_stmt(self, statement: stmt.Function):
+        function_var = LoxFunction(statement, self.environment)
+        self.environment.define(statement.name.lexeme, function_var)
 
     def visit_var_stmt(self, statement: stmt.Var):
         value = None
@@ -111,8 +129,21 @@ class Interpreter(expre.Visitor, stmt.Visitor):
 
         return None
 
-    def visit_call_expr(self, expr):
-        pass
+    def visit_call_expr(self, expr: expre.Call):
+        callee = self.evaluate(expr.callee)
+
+        arguments = []
+        for argument in expr.arguments:
+            arguments.append(self.evaluate(argument))
+
+        if not isinstance(callee, LoxCallable):
+            raise RuntimeException(expr.paren, "Can only call functions and classes.")
+
+        function_call = callee
+
+        if len(arguments) != function_call.arity():
+            raise RuntimeException(expr.paren, f"Expected {function_call.arity()} arguments but got {len(arguments)}.")
+        return function_call.call(self, arguments)
 
     def visit_get_expr(self, expr):
         pass
