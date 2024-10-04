@@ -18,6 +18,6 @@ and make sure that I understand correctly the way that a high level interpreter 
 - [x] Statements and State
 - [x] Control Flow
 - [x] Functions
-- [ ] Resolving and Binding
+- [x] Resolving and Binding
 - [ ] Classes
 - [ ] Inheritance

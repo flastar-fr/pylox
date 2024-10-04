@@ -18,6 +18,7 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         self.program = program
         self.globals = Environment()
         self.environment = self.globals
+        self.locals = {}
 
         self.globals.define("clock", ClockFunction())
 
@@ -68,7 +69,6 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         value = None
         if statement.initializer is not None:
             value = self.evaluate(statement.initializer)
-
         self.environment.define(statement.name.lexeme, value)
 
     def visit_while_stmt(self, statement: stmt.While):
@@ -86,7 +86,13 @@ class Interpreter(expre.Visitor, stmt.Visitor):
 
     def visit_assign_expr(self, expr: expre.Assign):
         value = self.evaluate(expr.value)
-        self.environment.assign(expr.name, value)
+
+        distance = self.locals[expr]
+        if distance is not None:
+            self.environment.assign_at(distance, expr.name, value)
+        else:
+            self.globals.assign(expr.name, value)
+
         return value
 
     def visit_binary_expr(self, expr: expre.Binary):
@@ -145,9 +151,6 @@ class Interpreter(expre.Visitor, stmt.Visitor):
             raise RuntimeException(expr.paren, f"Expected {function_call.arity()} arguments but got {len(arguments)}.")
         return function_call.call(self, arguments)
 
-    def visit_get_expr(self, expr):
-        pass
-
     def visit_grouping_expr(self, expr: expre.Grouping):
         return self.evaluate(expr.expression)
 
@@ -166,15 +169,6 @@ class Interpreter(expre.Visitor, stmt.Visitor):
 
         return self.evaluate(expr.right)
 
-    def visit_set_expr(self, expr):
-        pass
-
-    def visit_super_expr(self, expr):
-        pass
-
-    def visit_this_expr(self, expr):
-        pass
-
     def visit_unary_expr(self, expr: expre.Unary):
         right = self.evaluate(expr.right)
 
@@ -188,13 +182,22 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         return None
 
     def visit_variable_expr(self, expr: expre.Variable):
-        return self.environment.get(expr.name)
+        return self.look_up_variable(expr.name, expr)
+
+    def look_up_variable(self, name: Token, expr: expre.Expr):
+        distance = self.locals.get(expr)
+        if distance is not None:
+            return self.environment.get_at(distance, name.lexeme)
+        return self.globals.get(name)
 
     def evaluate(self, expr: expre.Expr) -> Any:
         return expr.accept(self)
 
     def execute(self, statement: stmt.Stmt):
         statement.accept(self)
+
+    def resolve(self, expr: expre.Expr, depth: int):
+        self.locals[expr] = depth
 
     def execute_block(self, statements: list[stmt.Stmt], environment: Environment):
         previous = self.environment
@@ -231,5 +234,4 @@ class Interpreter(expre.Visitor, stmt.Visitor):
     def check_number_operands(operator: Token, left: Any, right: Any) -> None:
         if isinstance(left, float) and isinstance(right, float):
             return None
-        print(left, right)
         raise RuntimeException(operator, "Operands must be numbers.")

@@ -97,7 +97,6 @@ class Parser:
         initializer = None
         if self.match(TokenType.EQUAL):
             initializer = self.expression()
-
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, initializer)
 

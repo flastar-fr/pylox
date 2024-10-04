@@ -2,6 +2,7 @@ import os
 
 from parser import Parser
 from interpreter import Interpreter
+from resolver import Resolver
 from runtime_error import RuntimeException
 from scanner import Scanner
 
@@ -48,7 +49,13 @@ class Pylox:
         statements = parser.parse()
 
         if self.had_error:
-            return
+            return None
+
+        resolver = Resolver(self.interpreter, self)
+        resolver.resolve(statements)
+
+        if self.had_error:
+            return None
 
         self.interpreter.interprete(statements)
 
