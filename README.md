@@ -14,10 +14,17 @@ So, after this book I will try to create a new language by myself, re implementi
 and make sure that I understand correctly the way that a high level interpreter works.
 
 ## Current stages :
+- [x] Introduction
+- [x] A Map of the Territory
+- [x] The Lox Language
+- [x] A Tree-Walk Interpreter
+- [x] Scanning
+- [x] Representing Code
+- [x] Parsing Expressions
 - [x] Evaluating Expressions
 - [x] Statements and State
 - [x] Control Flow
 - [x] Functions
 - [x] Resolving and Binding
-- [ ] Classes
+- [x] Classes
 - [ ] Inheritance

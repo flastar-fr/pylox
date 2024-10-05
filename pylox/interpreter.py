@@ -7,7 +7,11 @@ from environment import Environment
 from lox_callable import LoxCallable
 from clock_function import ClockFunction
 from lox_function import LoxFunction
-from runtime_error import RuntimeException
+from lox_class import LoxClass
+from lox_instance import LoxInstance
+from int_function import IntFunction
+from str_function import StrFunction
+from runtime_exception import RuntimeException
 from return_exception import Return
 from token_class import Token
 from token_type import TokenType
@@ -21,6 +25,8 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         self.locals = {}
 
         self.globals.define("clock", ClockFunction())
+        self.globals.define("str", StrFunction())
+        self.globals.define("float", IntFunction())
 
     def interprete(self, statements: list[stmt.Stmt]):
         try:
@@ -62,7 +68,7 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         self.evaluate(statement.expression)
 
     def visit_function_stmt(self, statement: stmt.Function):
-        function_var = LoxFunction(statement, self.environment)
+        function_var = LoxFunction(statement, self.environment, False)
         self.environment.define(statement.name.lexeme, function_var)
 
     def visit_var_stmt(self, statement: stmt.Var):
@@ -77,6 +83,17 @@ class Interpreter(expre.Visitor, stmt.Visitor):
 
     def visit_block_stmt(self, statement: stmt.Block):
         self.execute_block(statement.statements, Environment(self.environment))
+
+    def visit_class_stmt(self, statement: stmt.Class):
+        self.environment.define(statement.name.lexeme, None)
+
+        methods = {}
+        for method in statement.methods:
+            function = LoxFunction(method, self.environment, method.name.lexeme == "init")
+            methods[method.name.lexeme] = function
+
+        klass = LoxClass(statement.name.lexeme, methods)
+        self.environment.assign(statement.name, klass)
 
     def visit_if_stmt(self, statement: stmt.If):
         if self.is_truthy(self.evaluate(statement.condition)):
@@ -124,7 +141,6 @@ class Interpreter(expre.Visitor, stmt.Visitor):
                     return float(left) + float(right)
                 if isinstance(left, str) and isinstance(right, str):
                     return str(left) + str(right)
-
                 raise RuntimeException(expr.operator, "Operands must be two numbers or two strings.")
             case TokenType.SLASH:
                 self.check_number_operands(expr.operator, left, right)
@@ -151,6 +167,12 @@ class Interpreter(expre.Visitor, stmt.Visitor):
             raise RuntimeException(expr.paren, f"Expected {function_call.arity()} arguments but got {len(arguments)}.")
         return function_call.call(self, arguments)
 
+    def visit_get_expr(self, expr: expre.Get):
+        obj = self.evaluate(expr.object)
+        if isinstance(obj, LoxInstance):
+            return obj.get(expr.name)
+        raise RuntimeException(expr.name, "Only instances have properties.")
+
     def visit_grouping_expr(self, expr: expre.Grouping):
         return self.evaluate(expr.expression)
 
@@ -168,6 +190,19 @@ class Interpreter(expre.Visitor, stmt.Visitor):
                 return left
 
         return self.evaluate(expr.right)
+
+    def visit_set_expr(self, expr: expre.Set):
+        obj = self.evaluate(expr.object)
+
+        if not isinstance(obj, LoxInstance):
+            raise RuntimeException(expr.name, "Only instances have fields.")
+
+        value = self.evaluate(expr.value)
+        obj.set(expr.name, value)
+        return value
+
+    def visit_this_expr(self, expr: expre.This):
+        return self.look_up_variable(expr.keyword, expr)
 
     def visit_unary_expr(self, expr: expre.Unary):
         right = self.evaluate(expr.right)

@@ -1,6 +1,6 @@
 from typing import Any
 
-from runtime_error import RuntimeException
+from runtime_exception import RuntimeException
 from token_class import Token
 
 

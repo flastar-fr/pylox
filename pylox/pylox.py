@@ -3,7 +3,7 @@ import os
 from parser import Parser
 from interpreter import Interpreter
 from resolver import Resolver
-from runtime_error import RuntimeException
+from runtime_exception import RuntimeException
 from scanner import Scanner
 
 

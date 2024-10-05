@@ -1,13 +1,34 @@
-fun makeCounter() {
-  var i = 0;
-  fun count() {
-    i = i + 1;
-    print i;
-  }
+class Player {
+    init(name, health, attack) {
+        this.name = name;
+        this.health = health;
+        this.attack = attack;
+    }
 
-  return count;
+    take_damage(player) {
+        this.health = this.health - player.attack;
+
+        if (this.health <= 0) {
+            print this.name + " has fallen from " + player.name + "'s hands.";
+            this.health = 0;
+        }
+    }
+
+    attack_player(player) {
+        player.take_damage(this);
+    }
+
+    show() {
+        return "Name : " + str(this.name) + ", Health : " + str(this.health) + ", Attack : " + str(this.attack);
+    }
 }
 
-var counter = makeCounter();
-counter(); // "1".
-counter(); // "2".
+var player1 = Player("flastar", 20, 1);
+var player2 = Player("Victime", 1, 0);
+print player1.show();
+print player2.show();
+
+player1.attack_player(player2);
+
+print player1.show();
+print player2.show();
