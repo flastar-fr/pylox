@@ -1,12 +1,12 @@
 # Pylox implementation
-This project is a Python implementation of the well known book written by Robert Nystrom [Crafting Interpreter](https://craftinginterpreters.com/).
+This project is a Python implementation of the well known book [Crafting Interpreter](https://craftinginterpreters.com/) written by Robert Nystrom.
 
 ## Pylox command installation
-You can add the pylox.bat file into your environment variable path to simulate a language command line call such as ``pylox 3*5``.
+You can add the pylox.bat file into your environment variable path to simulate a language command line call such as ``pylox <my file .pylox file>``.
 
 ## Objectives :
 I'm following the book step by step and trying to figure out how to implemente the Java code I see in Python.
-I try to stay using the same implentation tricks to be able to efficiently re implemente and understand the code books.
+I try to stay using the same implentation tricks to be able to efficiently re implemente and understand the code through the chapters.
 
 I want to complete the Java implementation in the book of Lox language to make sure that I can make my own interpreter and language using Python.
 
@@ -27,4 +27,4 @@ and make sure that I understand correctly the way that a high level interpreter 
 - [x] Functions
 - [x] Resolving and Binding
 - [x] Classes
-- [ ] Inheritance
+- [x] Inheritance

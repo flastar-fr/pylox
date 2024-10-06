@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from expr import Expr
+from expr import Expr, Variable
 from token_class import Token
 
 
@@ -120,8 +120,9 @@ class Return(Stmt):
 
 
 class Class(Stmt):
-    def __init__(self, name: Token, methods: list[Function]):
+    def __init__(self, name: Token, superclass: Variable, methods: list[Function]):
         self.name = name
+        self.superclass = superclass
         self.methods = methods
 
     def accept(self, visitor: Visitor):

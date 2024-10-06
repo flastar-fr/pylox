@@ -1,7 +1,7 @@
 from interpreter import Interpreter
 from expr import (Visitor as eVisitor, Expr, Variable, Assign, Binary,
                   Call, Grouping, Literal, Logical,
-                  Unary, Get, Set, This)
+                  Unary, Get, Set, This, Super)
 from function_type import FunctionType
 from class_type import ClassType
 from stmt import Visitor as sVisitor, Block, Stmt, Var, Function, Expression, If, Print, Return, While, Token, Class
@@ -27,6 +27,18 @@ class Resolver(eVisitor, sVisitor):
         self.declare(statement.name)
         self.define(statement.name)
 
+        if statement.superclass is not None and statement.name.lexeme == statement.superclass.name.lexeme:
+            self.program.show_error(statement.superclass.name, "A class can't inherit from itself.")
+
+        if statement.superclass is not None:
+            self.current_class = ClassType.SUBCLASS
+
+            self.resolve(statement.superclass)
+
+        if statement.superclass is not None:
+            self.begin_scope()
+            self.scopes[-1]["super"] = True
+
         self.begin_scope()
         self.scopes[-1]["this"] = True
 
@@ -37,6 +49,8 @@ class Resolver(eVisitor, sVisitor):
             self.resolve_function(method, declaration)
 
         self.end_scope()
+        if statement.superclass is not None:
+            self.end_scope()
         self.current_class = enclosing_class
 
     def visit_expression_stmt(self, statement: Expression):
@@ -106,6 +120,13 @@ class Resolver(eVisitor, sVisitor):
     def visit_set_expr(self, expr: Set):
         self.resolve(expr.value)
         self.resolve(expr.object)
+
+    def visit_super_expr(self, expr: Super):
+        if self.current_class == ClassType.NONE:
+            self.program.show_error(expr.keyword, "Can't use 'super' outside of a class.")
+        elif self.current_class != ClassType.SUBCLASS:
+            self.program.show_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+        self.resolve_local(expr, expr.keyword)
 
     def visit_this_expr(self, expr: This):
         if self.current_class == ClassType.NONE:

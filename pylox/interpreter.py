@@ -10,6 +10,7 @@ from lox_function import LoxFunction
 from lox_class import LoxClass
 from lox_instance import LoxInstance
 from int_function import IntFunction
+from randint_function import RandintFunction
 from str_function import StrFunction
 from runtime_exception import RuntimeException
 from return_exception import Return
@@ -27,6 +28,7 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         self.globals.define("clock", ClockFunction())
         self.globals.define("str", StrFunction())
         self.globals.define("float", IntFunction())
+        self.globals.define("randint", RandintFunction())
 
     def interprete(self, statements: list[stmt.Stmt]):
         try:
@@ -85,14 +87,28 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         self.execute_block(statement.statements, Environment(self.environment))
 
     def visit_class_stmt(self, statement: stmt.Class):
+        superclass = None
+        if statement.superclass is not None:
+            superclass = self.evaluate(statement.superclass)
+            if not isinstance(superclass, LoxClass):
+                raise RuntimeException(statement.superclass.name, "Superclass must be a class.")
+
         self.environment.define(statement.name.lexeme, None)
+
+        if statement.superclass is not None:
+            self.environment = Environment(self.environment)
+            self.environment.define("super", superclass)
 
         methods = {}
         for method in statement.methods:
             function = LoxFunction(method, self.environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
 
-        klass = LoxClass(statement.name.lexeme, methods)
+        klass = LoxClass(statement.name.lexeme, superclass, methods)
+
+        if statement.superclass is not None:
+            self.environment = self.environment.enclosing
+
         self.environment.assign(statement.name, klass)
 
     def visit_if_stmt(self, statement: stmt.If):
@@ -201,6 +217,19 @@ class Interpreter(expre.Visitor, stmt.Visitor):
         obj.set(expr.name, value)
         return value
 
+    def visit_super_expr(self, expr: expre.Super):
+        distance = self.locals.get(expr)
+        superclass = self.environment.get_at(distance, "super")
+
+        obj = self.environment.get_at(distance - 1, "this")
+
+        method = superclass.find_method(expr.method.lexeme)
+
+        if method is None:
+            raise RuntimeException(expr.method, f"Undefined property '{expr.method.lexeme}'.")
+
+        return method.bind(obj)
+
     def visit_this_expr(self, expr: expre.This):
         return self.look_up_variable(expr.keyword, expr)
 
@@ -269,4 +298,5 @@ class Interpreter(expre.Visitor, stmt.Visitor):
     def check_number_operands(operator: Token, left: Any, right: Any) -> None:
         if isinstance(left, float) and isinstance(right, float):
             return None
+
         raise RuntimeException(operator, "Operands must be numbers.")

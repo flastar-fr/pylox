@@ -34,6 +34,10 @@ class Visitor(ABC):
         pass
 
     @abstractmethod
+    def visit_super_expr(self, expr):
+        pass
+
+    @abstractmethod
     def visit_grouping_expr(self, expr):
         pass
 

@@ -9,8 +9,7 @@ class Player {
         this.health = this.health - player.attack;
 
         if (this.health <= 0) {
-            print this.name + " has fallen from " + player.name + "'s hands.";
-            this.health = 0;
+            this.dying(player);
         }
     }
 
@@ -18,17 +17,47 @@ class Player {
         player.take_damage(this);
     }
 
+    dying(player) {
+        print this.name + "has fallen from " + player.name + "'s hands.";
+    }
+
     show() {
         return "Name : " + str(this.name) + ", Health : " + str(this.health) + ", Attack : " + str(this.attack);
     }
 }
 
-var player1 = Player("flastar", 20, 1);
-var player2 = Player("Victime", 1, 0);
+class Mage < Player {
+    init(name, health, attack, title) {
+        super.init(name, health, attack);
+        this.title = title;
+    }
+
+    dying(player) {
+        print "Le mage " + this.name + " a été tué des mains de " + player.title + player.name + ".";
+    }
+}
+
+class BonARien < Player {
+    init(name, health, attack, title) {
+        super.init(name, health, attack);
+        this.title = title;
+    }
+
+    dying(player) {
+        print "Le bon a rien " + this.name + " a ete tue des mains du " + player.title + " " + player.name + ".";
+    }
+}
+
+var player1 = Mage("flastar", 20, 1, "mage");
+var player2 = BonARien("Victime", 1, 0.5, "bon a rien");
 print player1.show();
 print player2.show();
 
-player1.attack_player(player2);
+if (randint(0, 1) == 0) {
+    player1.attack_player(player2);
+} else {
+    player2.attack_player(player1);
+}
 
 print player1.show();
 print player2.show();
